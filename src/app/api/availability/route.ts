@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { startOfWeek, addWeeks } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
+import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import { fetchAllCalendars } from "@/lib/calendar-fetcher";
 import { generateAvailabilitySlots } from "@/lib/availability-engine";
 import { supabase } from "@/lib/supabase";
@@ -13,8 +13,11 @@ export async function GET(request: NextRequest) {
     const weeksAhead = Math.min(parseInt(searchParams.get("weeks") ?? "4"), 8);
 
     const tz = "America/Toronto";
+    // Get Monday 00:00 in Toronto time, expressed as a UTC timestamp
     const nowLocal = toZonedTime(new Date(), tz);
-    const rangeStart = startOfWeek(nowLocal, { weekStartsOn: 1 });
+    const weekStartLocal = startOfWeek(nowLocal, { weekStartsOn: 1 });
+    weekStartLocal.setHours(0, 0, 0, 0);
+    const rangeStart = fromZonedTime(weekStartLocal, tz);
     const rangeEnd = addWeeks(rangeStart, weeksAhead);
 
     const events = await fetchAllCalendars();
