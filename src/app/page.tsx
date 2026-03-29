@@ -106,10 +106,11 @@ export default function HomePage() {
         {selectedSlot && (
           <BookingModal
             slot={selectedSlot}
+            slots={slots}
             onClose={() => setSelectedSlot(null)}
             onConfirm={() => {
               setSelectedSlot(null);
-              fetchAvailability(); // refresh to show new booking
+              fetchAvailability();
             }}
           />
         )}

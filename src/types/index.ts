@@ -65,16 +65,22 @@ export interface AvailabilitySlot {
   bookingCount: number; // how many bookings already in this slot
 }
 
+export type BookingStatus = "pending" | "approved" | "rejected";
+
 export interface Booking {
   id: string;
   title: string;
   activityType: ActivityType;
   start: Date;
   end: Date;
+  durationHours: number;
   bookedByName: string;
   bookedByEmail?: string;
   note?: string;
+  status: BookingStatus;
   secretToken: string;
+  approvalToken: string;
+  respondedAt?: Date;
   createdAt: Date;
 }
 

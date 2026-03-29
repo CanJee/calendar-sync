@@ -23,9 +23,11 @@ export async function GET(request: NextRequest) {
     const events = await fetchAllCalendars();
 
     // Fetch existing bookings for the range
+    // Only approved bookings count against availability
     const { data: bookingRows, error } = await supabase
       .from("bookings")
       .select("start_time, end_time")
+      .eq("status", "approved")
       .gte("start_time", rangeStart.toISOString())
       .lte("end_time", rangeEnd.toISOString());
 

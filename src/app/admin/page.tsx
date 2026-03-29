@@ -30,6 +30,8 @@ interface BookingRow {
   booked_by_email: string | null;
   note: string | null;
   secret_token: string;
+  approval_token: string;
+  status: "pending" | "approved" | "rejected";
 }
 
 export default function AdminPage() {
@@ -264,36 +266,82 @@ export default function AdminPage() {
             <h2 className="text-lg font-semibold mb-4">All bookings</h2>
             <div className="space-y-2">
               {bookings.map((b) => (
-                <div
-                  key={b.id}
-                  className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex items-start justify-between gap-4"
-                >
-                  <div>
-                    <div className="font-medium text-white">{b.title}</div>
-                    <div className="text-sm text-zinc-400 mt-0.5">
-                      {format(new Date(b.start_time), "EEE MMM d, h:mm a")} –{" "}
-                      {format(new Date(b.end_time), "h:mm a")}
-                    </div>
-                    {b.note && (
-                      <div className="text-xs text-zinc-500 mt-1 italic">
-                        "{b.note}"
-                      </div>
-                    )}
-                    {b.booked_by_email && (
-                      <div className="text-xs text-zinc-500 mt-1">
-                        {b.booked_by_email}
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-xs text-zinc-600 font-mono shrink-0">
-                    {b.secret_token.slice(0, 8)}...
-                  </div>
-                </div>
+                <BookingCard key={b.id} booking={b} adminKey={adminKey} onUpdate={() => loadData(adminKey)} />
               ))}
             </div>
           </div>
         )}
       </div>
     </main>
+  );
+}
+
+function BookingCard({
+  booking: b,
+  adminKey,
+  onUpdate,
+}: {
+  booking: BookingRow;
+  adminKey: string;
+  onUpdate: () => void;
+}) {
+  const [acting, setActing] = useState(false);
+
+  const statusBadge: Record<string, string> = {
+    pending: "bg-yellow-900/50 text-yellow-300 border-yellow-700",
+    approved: "bg-green-900/50 text-green-300 border-green-700",
+    rejected: "bg-red-900/50 text-red-300 border-red-700",
+  };
+
+  async function respond(action: "approve" | "reject") {
+    setActing(true);
+    await fetch(`/api/bookings/${action}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ approvalToken: b.approval_token }),
+    });
+    setActing(false);
+    onUpdate();
+  }
+
+  return (
+    <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex items-start justify-between gap-4">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-medium text-white truncate">{b.title}</span>
+          <span className={`text-xs px-2 py-0.5 rounded-full border ${statusBadge[b.status]}`}>
+            {b.status}
+          </span>
+        </div>
+        <div className="text-sm text-zinc-400 mt-0.5">
+          {format(new Date(b.start_time), "EEE MMM d, h:mm a")} –{" "}
+          {format(new Date(b.end_time), "h:mm a")}
+        </div>
+        {b.booked_by_email && (
+          <div className="text-xs text-zinc-500 mt-1">{b.booked_by_email}</div>
+        )}
+        {b.note && (
+          <div className="text-xs text-zinc-500 mt-1 italic">"{b.note}"</div>
+        )}
+      </div>
+      {b.status === "pending" && (
+        <div className="flex gap-2 shrink-0">
+          <button
+            onClick={() => respond("approve")}
+            disabled={acting}
+            className="px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white text-xs font-semibold rounded-lg transition disabled:opacity-50"
+          >
+            Approve
+          </button>
+          <button
+            onClick={() => respond("reject")}
+            disabled={acting}
+            className="px-3 py-1.5 bg-red-800 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition disabled:opacity-50"
+          >
+            Reject
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

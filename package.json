@@ -16,6 +16,7 @@
     "node-ical": "^0.25.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "resend": "^6.9.4",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
