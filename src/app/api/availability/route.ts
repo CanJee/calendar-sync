@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { startOfWeek, addWeeks } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { fetchAllCalendars } from "@/lib/calendar-fetcher";
 import { generateAvailabilitySlots } from "@/lib/availability-engine";
 import { supabase } from "@/lib/supabase";
@@ -11,7 +12,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const weeksAhead = Math.min(parseInt(searchParams.get("weeks") ?? "4"), 8);
 
-    const rangeStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const tz = "America/Toronto";
+    const nowLocal = toZonedTime(new Date(), tz);
+    const rangeStart = startOfWeek(nowLocal, { weekStartsOn: 1 });
     const rangeEnd = addWeeks(rangeStart, weeksAhead);
 
     const events = await fetchAllCalendars();
